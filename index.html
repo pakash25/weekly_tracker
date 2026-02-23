@@ -812,7 +812,33 @@
     if(weekOff<minW)weekOff=minW;
     if(weekOff>maxW)weekOff=maxW;
     render();
-    if(gistOk){const gd=await lg();if(gd){allData=gd;sc();render();}}
+    if(gistOk){
+      const gd=await lg();
+      if(gd&&Object.keys(gd).length>0){
+        // Merge: Gist is the source of truth, but preserve any local keys not in Gist
+        const localKeys=Object.keys(allData);
+        const gistKeys=Object.keys(gd);
+        // Use Gist data as base, merge in any local-only week keys
+        const merged={...gd};
+        for(const k of localKeys){
+          if(!merged[k])merged[k]=allData[k];
+          else{
+            // Deep merge: for each member in the week
+            for(const mid of Object.keys(allData[k]||{})){
+              if(!merged[k][mid])merged[k][mid]=allData[k][mid];
+            }
+          }
+        }
+        allData=merged;
+        sc();
+        render();
+        // Push merged data back to Gist if we added local-only data
+        if(localKeys.some(k=>!gistKeys.includes(k)))sg();
+      } else if(Object.keys(allData).length>0){
+        // Gist is empty but local has data -- push local data to Gist
+        sg();
+      }
+    }
     const ol=document.getElementById('loadingOverlay');
     if(ol){ol.style.opacity='0';setTimeout(()=>ol.remove(),500);}
   }
@@ -821,3 +847,4 @@
 </script>
 </body>
 </html>
+
