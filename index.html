@@ -478,7 +478,7 @@
 <script>
 (function(){
   'use strict';
-  const GIST_ID='c9d7e812a67b22da62924fac1b383c3f',GIST_TOKEN='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',GIST_FILE='data.json';
+  const GIST_ID='c9d7e812a67b22da62924fac1b383c3f',GIST_TOKEN='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',GIST_FILE='data.json';
   const ADMIN_PIN='400570';
   const PIN_LENGTH=6;
   const STORAGE_KEY='wtReport3';
@@ -540,8 +540,31 @@
 
   function lc(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{};}catch{return{};}}
   function sc(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(allData));}catch{}}
-  async function lg(){if(!gistOk)return null;try{const r=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Authorization':'token '+GIST_TOKEN,'Accept':'application/vnd.github.v3+json'},cache:'no-store'});if(!r.ok)throw new Error(r.status);const g=await r.json(),f=g.files[GIST_FILE];if(!f)throw new Error('no file');return JSON.parse(f.content);}catch(e){console.warn('Gist load fail:',e.message);return null;}}
-  async function sg(){if(!gistOk)return;try{await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+GIST_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(allData,null,2)}}})});}catch(e){console.warn('Gist save fail:',e.message);}}
+  async function lg(){
+    if(!gistOk){console.warn('[GIST] gistOk is false, skipping load');return null;}
+    try{
+      console.log('[GIST] Loading from gist...');
+      const r=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Authorization':'token '+GIST_TOKEN,'Accept':'application/vnd.github.v3+json'},cache:'no-store'});
+      console.log('[GIST] Load response status:',r.status);
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const g=await r.json(),f=g.files[GIST_FILE];
+      if(!f)throw new Error('no file named '+GIST_FILE);
+      const parsed=JSON.parse(f.content);
+      console.log('[GIST] Loaded data keys:',Object.keys(parsed),'total keys:',Object.keys(parsed).length);
+      return parsed;
+    }catch(e){console.error('[GIST] Load FAILED:',e.message);return null;}
+  }
+  async function sg(){
+    if(!gistOk){console.warn('[GIST] gistOk is false, skipping save');return;}
+    try{
+      const payload=JSON.stringify(allData,null,2);
+      console.log('[GIST] Saving to gist, data keys:',Object.keys(allData),'size:',payload.length,'bytes');
+      const r=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+GIST_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILE]:{content:payload}}})});
+      console.log('[GIST] Save response status:',r.status);
+      if(!r.ok){const t=await r.text();console.error('[GIST] Save FAILED:',r.status,t);}
+      else console.log('[GIST] Save SUCCESS');
+    }catch(e){console.error('[GIST] Save FAILED:',e.message);}
+  }
   function save(){sc();si();clearTimeout(saveT);saveT=setTimeout(()=>sg(),1500);}
   function gw(k){if(!allData[k])allData[k]={status:'green',summary:'',wins:[],tasks:[],blockers:[],nextWeek:[]};return allData[k];}
   function si(){const el=document.getElementById('saveIndicator');el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),1200);}
@@ -807,6 +830,7 @@
 
   async function init(){
     allData=lc();
+    console.log('[INIT] localStorage data keys:',Object.keys(allData));
     // Clamp weekOff to valid range on load
     const minW=getMinWeek(),maxW=getMaxWeek();
     if(weekOff<minW)weekOff=minW;
@@ -814,16 +838,16 @@
     render();
     if(gistOk){
       const gd=await lg();
-      if(gd&&Object.keys(gd).length>0){
-        // Merge: Gist is the source of truth, but preserve any local keys not in Gist
+      if(gd===null){
+        console.warn('[INIT] Gist load returned null (fetch failed). Using localStorage only.');
+      } else if(Object.keys(gd).length>0){
+        console.log('[INIT] Gist has data. Merging with local...');
         const localKeys=Object.keys(allData);
         const gistKeys=Object.keys(gd);
-        // Use Gist data as base, merge in any local-only week keys
         const merged={...gd};
         for(const k of localKeys){
           if(!merged[k])merged[k]=allData[k];
           else{
-            // Deep merge: for each member in the week
             for(const mid of Object.keys(allData[k]||{})){
               if(!merged[k][mid])merged[k][mid]=allData[k][mid];
             }
@@ -832,12 +856,19 @@
         allData=merged;
         sc();
         render();
-        // Push merged data back to Gist if we added local-only data
-        if(localKeys.some(k=>!gistKeys.includes(k)))sg();
+        if(localKeys.some(k=>!gistKeys.includes(k))){
+          console.log('[INIT] Local has keys not in gist, pushing merged data...');
+          sg();
+        }
       } else if(Object.keys(allData).length>0){
-        // Gist is empty but local has data -- push local data to Gist
-        sg();
+        console.log('[INIT] Gist is empty but localStorage has data. Pushing to gist...');
+        await sg();
+        console.log('[INIT] Push complete.');
+      } else {
+        console.log('[INIT] Both gist and localStorage are empty.');
       }
+    } else {
+      console.warn('[INIT] gistOk is false. GIST_ID:',!!GIST_ID,'GIST_TOKEN:',!!GIST_TOKEN);
     }
     const ol=document.getElementById('loadingOverlay');
     if(ol){ol.style.opacity='0';setTimeout(()=>ol.remove(),500);}
@@ -847,5 +878,6 @@
 </script>
 </body>
 </html>
+
 
 
