@@ -453,15 +453,20 @@
   <div class="main-content" id="mainContent"></div>
   <div class="modal-overlay" id="pinModal">
     <div class="modal-card">
-      <div class="modal-title">Admin Access</div>
-      <div class="modal-subtitle">Enter 6-digit PIN to edit</div>
-      <div class="pin-input-row" id="pinRow">
-        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
-        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
-        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
-        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
-        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
-        <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+      <div class="modal-title" id="pinModalTitle">Admin Access</div>
+      <div class="modal-subtitle" id="pinModalSub">Enter 6-digit PIN to edit</div>
+      <div id="pinStep1">
+        <div class="pin-input-row" id="pinRow">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+      <div id="pinStep2" style="display:none;">
+        <input type="password" id="patInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" style="width:100%;padding:10px 12px;font-size:13px;font-weight:500;border:1.5px solid rgba(0,0,0,0.06);border-radius:12px;background:rgba(255,255,255,0.85);outline:none;transition:all 0.2s;margin-bottom:16px;font-family:monospace;" />
       </div>
       <div class="modal-actions">
         <button class="modal-btn secondary" id="pinCancel">Cancel</button>
@@ -478,7 +483,9 @@
 <script>
 (function(){
   'use strict';
-  const GIST_ID='c9d7e812a67b22da62924fac1b383c3f',GIST_TOKEN='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',GIST_FILE='data.json';
+  const GIST_ID='c9d7e812a67b22da62924fac1b383c3f',GIST_FILE='data.json';
+  function getGistToken(){return sessionStorage.getItem('gist_pat')||'';}
+  function setGistToken(t){sessionStorage.setItem('gist_pat',t);}
   const ADMIN_PIN='400570';
   const PIN_LENGTH=6;
   const STORAGE_KEY='wtReport3';
@@ -489,7 +496,7 @@
     {id:'mahesh',name:'Mahesh',initial:'MD',color:'#44C4A1',skills:['Anomaly Detection','Experimentation','Generative AI*','Analytics*','Data Governance*','Backend Development*']}
   ];
   const MM={};MEMBERS.forEach(m=>MM[m.id]=m);
-  let weekOff=-1,admin=false,allData={},gistOk=!!(GIST_ID&&GIST_TOKEN),saveT=null;
+  let weekOff=-1,admin=false,allData={},gistOk=!!GIST_ID,saveT=null;
   let dropdownOpen=false;
 
   const HARD_START=new Date(2026,1,16);
@@ -544,7 +551,7 @@
     if(!gistOk){console.warn('[GIST] gistOk is false, skipping load');return null;}
     try{
       console.log('[GIST] Loading from gist...');
-      const r=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Authorization':'token '+GIST_TOKEN,'Accept':'application/vnd.github.v3+json'},cache:'no-store'});
+      const r=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Accept':'application/vnd.github.v3+json'},cache:'no-store'});
       console.log('[GIST] Load response status:',r.status);
       if(!r.ok)throw new Error('HTTP '+r.status);
       const g=await r.json(),f=g.files[GIST_FILE];
@@ -559,7 +566,9 @@
     try{
       const payload=JSON.stringify(allData,null,2);
       console.log('[GIST] Saving to gist, data keys:',Object.keys(allData),'size:',payload.length,'bytes');
-      const r=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+GIST_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILE]:{content:payload}}})});
+      const tok=getGistToken();
+      if(!tok){console.warn('[GIST] No token in session, skipping save');return;}
+      const r=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+tok,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILE]:{content:payload}}})});
       console.log('[GIST] Save response status:',r.status);
       if(!r.ok){const t=await r.text();console.error('[GIST] Save FAILED:',r.status,t);}
       else console.log('[GIST] Save SUCCESS');
@@ -805,7 +814,21 @@
   });
   document.getElementById('adminToggle').addEventListener('click',()=>{if(admin){admin=false;weekOff=Math.min(weekOff,0);toggleDropdown(false);render();}else spm();});
 
-  function spm(){const o=document.getElementById('pinModal');o.classList.add('show');const inp=o.querySelectorAll('.pin-digit');inp.forEach(i=>{i.value='';i.classList.remove('error');});setTimeout(()=>inp[0].focus(),100);}
+  let pinStepNum=1;
+  function spm(){
+    pinStepNum=1;
+    const o=document.getElementById('pinModal');
+    document.getElementById('pinStep1').style.display='';
+    document.getElementById('pinStep2').style.display='none';
+    document.getElementById('pinModalTitle').textContent='Admin Access';
+    document.getElementById('pinModalSub').textContent='Enter 6-digit PIN to edit';
+    document.getElementById('pinSubmit').textContent='Unlock';
+    document.getElementById('patInput').value='';
+    o.classList.add('show');
+    const inp=o.querySelectorAll('.pin-digit');
+    inp.forEach(i=>{i.value='';i.classList.remove('error');});
+    setTimeout(()=>inp[0].focus(),100);
+  }
   function hpm(){document.getElementById('pinModal').classList.remove('show');}
   const pi=document.querySelectorAll('#pinRow .pin-digit');
   pi.forEach((inp,i)=>{
@@ -820,12 +843,29 @@
     });
   });
   document.getElementById('pinSubmit').addEventListener('click',tu);
+  document.getElementById('patInput').addEventListener('keydown',e=>{if(e.key==='Enter')tu();});
   document.getElementById('pinCancel').addEventListener('click',hpm);
   document.getElementById('pinModal').addEventListener('click',e=>{if(e.target===e.currentTarget)hpm();});
   function tu(){
-    const pin=Array.from(pi).map(i=>i.value).join('');
-    if(pin===ADMIN_PIN){admin=true;hpm();render();}
-    else{pi.forEach(i=>i.classList.add('error'));setTimeout(()=>pi.forEach(i=>{i.classList.remove('error');i.value='';}),500);pi[0].focus();}
+    if(pinStepNum===1){
+      const pin=Array.from(pi).map(i=>i.value).join('');
+      if(pin!==ADMIN_PIN){pi.forEach(i=>i.classList.add('error'));setTimeout(()=>pi.forEach(i=>{i.classList.remove('error');i.value='';}),500);pi[0].focus();return;}
+      // PIN correct -- check if we already have a token in session
+      if(getGistToken()){admin=true;hpm();render();return;}
+      // Show PAT step
+      pinStepNum=2;
+      document.getElementById('pinStep1').style.display='none';
+      document.getElementById('pinStep2').style.display='';
+      document.getElementById('pinModalTitle').textContent='GitHub Token';
+      document.getElementById('pinModalSub').textContent='Paste your Personal Access Token (gist scope)';
+      document.getElementById('pinSubmit').textContent='Save & Continue';
+      setTimeout(()=>document.getElementById('patInput').focus(),100);
+    } else {
+      const tok=document.getElementById('patInput').value.trim();
+      if(!tok){document.getElementById('patInput').style.borderColor='var(--red)';setTimeout(()=>document.getElementById('patInput').style.borderColor='',800);return;}
+      setGistToken(tok);
+      admin=true;hpm();render();
+    }
   }
 
   async function init(){
@@ -868,7 +908,7 @@
         console.log('[INIT] Both gist and localStorage are empty.');
       }
     } else {
-      console.warn('[INIT] gistOk is false. GIST_ID:',!!GIST_ID,'GIST_TOKEN:',!!GIST_TOKEN);
+      console.warn('[INIT] gistOk is false. GIST_ID:',!!GIST_ID);
     }
     const ol=document.getElementById('loadingOverlay');
     if(ol){ol.style.opacity='0';setTimeout(()=>ol.remove(),500);}
@@ -878,6 +918,3 @@
 </script>
 </body>
 </html>
-
-
-
