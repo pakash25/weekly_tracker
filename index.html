@@ -490,7 +490,7 @@
   const PIN_LENGTH=6;
   const STORAGE_KEY='wtReport3';
   const MEMBERS=[
-    {id:'akash',name:'Akash',initial:'AP',color:'#E87A45',skills:['Incrementality*','Anomaly Detection','Frontend Development*','Backend Development','Analytics*','LY/TY Reporting*']},
+    {id:'akash',name:'Akash',initial:'AP',color:'#E87A45',skills:['Incrementality *','Anomaly Detection','Frontend Development*','Backend Development','Analytics*','LY/TY Reporting*']},
     {id:'pranav',name:'Pranav',initial:'PD',color:'#5B8DEF',skills:['Incrementality','Anomaly Detection*','Experimentation*','Analytics*','LY/TY Reporting*','Tableau*']},
     {id:'chaitanya',name:'Chaitanya',initial:'CR',color:'#E667AF',skills:['Generative AI','Frontend Development*','Backend Development*','IT infrastucture and Deployment*','LY/TY Reporting','Tableau']},
     {id:'mahesh',name:'Mahesh',initial:'MD',color:'#44C4A1',skills:['Anomaly Detection','Experimentation','Generative AI*','Analytics*','Data Governance*','Backend Development*']}
@@ -728,7 +728,7 @@
     h+='</div>';
 
     h+='<div class="team-strip glass"><div class="team-strip-label">Team</div><div class="team-strip-members">';
-    MEMBERS.forEach(mb=>{h+=`<div class="team-chip"><div class="team-chip-orb" style="background:${mb.color};">${mb.initial}</div><span class="team-chip-name">${mb.name}</span><div class="team-chip-skills">${mb.skills.map(s=>{const star=s.endsWith('*');const name=star?s.slice(0,-1):s;return`<span class="skill-chip${star?' primary':''}">${name}${star?'<span class="skill-star">*</span>':''}</span>`;}).join('')}</div></div>`;});
+    MEMBERS.forEach(mb=>{h+=`<div class="team-chip"><div class="team-chip-orb" style="background:${mb.color};">${mb.initial}</div><span class="team-chip-name">${mb.name}</span><div class="team-chip-skills">${mb.skills.map(s=>{const star=s.endsWith('*');const name=star?s.slice(0,-1):s;return`<span class="skill-chip${star?' primary':''}">${name}${star?'<span class="skill-star">&#9733;</span>':''}</span>`;}).join('')}</div></div>`;});
     h+='</div></div>';
 
     if(ed){
@@ -918,3 +918,4 @@
 </script>
 </body>
 </html>
+
