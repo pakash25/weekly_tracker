@@ -504,7 +504,7 @@
 
   function ws(o){const d=new Date();d.setHours(0,0,0,0);const day=d.getDay();d.setDate(d.getDate()-day+(day===0?-6:1)+o*7);return d;}
   function we(o){const d=ws(o);d.setDate(d.getDate()+4);return d;}
-  function wk(o){return ws(o).toISOString().split('T')[0];}
+  function wk(o){const d=ws(o);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function wl(o){
     const s=ws(o),e=we(o);
     const op={month:'short',day:'numeric'};
@@ -918,4 +918,5 @@
 </script>
 </body>
 </html>
+
 
