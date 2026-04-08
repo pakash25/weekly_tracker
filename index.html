@@ -496,7 +496,7 @@
     {id:'mahesh',name:'Mahesh',initial:'MD',color:'#44C4A1',skills:['Anomaly Detection','Experimentation','Generative AI*','Analytics*','Data Governance*','Backend Development*']}
   ];
   const MM={};MEMBERS.forEach(m=>MM[m.id]=m);
-  let weekOff=-1,admin=false,allData={},gistOk=!!GIST_ID,saveT=null;
+  let weekOff=-1,admin=false,allData={},gistOk=!!GIST_ID,saveT=null,dirtyKeys=new Set();
   let dropdownOpen=false;
 
   const HARD_START=new Date(2026,1,16);
@@ -574,7 +574,7 @@
       else console.log('[GIST] Save SUCCESS');
     }catch(e){console.error('[GIST] Save FAILED:',e.message);}
   }
-  function save(){sc();si();clearTimeout(saveT);saveT=setTimeout(()=>sg(),1500);}
+  function save(){const k=wk(weekOff);if(allData[k]){allData[k]._ts=Date.now();dirtyKeys.add(k);}sc();si();clearTimeout(saveT);saveT=setTimeout(()=>sg(),1500);}
   function gw(k){if(!allData[k])allData[k]={status:'green',summary:'',wins:[],tasks:[],blockers:[],nextWeek:[]};return allData[k];}
   function si(){const el=document.getElementById('saveIndicator');el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),1200);}
   function cm(w){return{wins:w.wins.length,completed:w.tasks.filter(t=>t.done).length,inProgress:w.tasks.filter(t=>!t.done&&!t.blocked).length,blocked:w.tasks.filter(t=>t.blocked).length+w.blockers.length};}
@@ -812,7 +812,7 @@
   document.getElementById('nextWeek').addEventListener('click',()=>{
     if(weekOff<getMaxWeek()){weekOff++;toggleDropdown(false);render();}
   });
-  document.getElementById('adminToggle').addEventListener('click',()=>{if(admin){admin=false;weekOff=Math.min(weekOff,0);toggleDropdown(false);render();}else spm();});
+  document.getElementById('adminToggle').addEventListener('click',()=>{if(admin){admin=false;weekOff=Math.min(weekOff,0);toggleDropdown(false);if(saveT){clearTimeout(saveT);saveT=null;sg();}render();}else spm();});
 
   let pinStepNum=1;
   function spm(){
@@ -884,14 +884,17 @@
         console.log('[INIT] Gist has data. Merging with local...');
         const localKeys=Object.keys(allData);
         const gistKeys=Object.keys(gd);
-        const merged={...gd};
-        for(const k of localKeys){
-          if(!merged[k])merged[k]=allData[k];
-          else{
-            for(const mid of Object.keys(allData[k]||{})){
-              if(!merged[k][mid])merged[k][mid]=allData[k][mid];
-            }
-          }
+        const merged={};
+        const allKeys=new Set([...gistKeys,...localKeys]);
+        for(const k of allKeys){
+          const lv=allData[k],gv=gd[k];
+          if(!lv){merged[k]=gv;continue;}
+          if(!gv){merged[k]=lv;continue;}
+          // Both exist. If user edited this key this session, local wins.
+          if(dirtyKeys.has(k)){merged[k]=lv;continue;}
+          // Otherwise pick the newer by _ts (fallback to local).
+          const lts=lv._ts||0,gts=gv._ts||0;
+          merged[k]=(gts>lts)?gv:lv;
         }
         allData=merged;
         sc();
