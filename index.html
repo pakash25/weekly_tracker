@@ -424,7 +424,24 @@
     .plan-card-meta { display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap; }
     .plan-card-state { padding:3px 7px; border-radius:6px; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; border:1.5px solid rgba(0,0,0,0.06); background:white; cursor:pointer; outline:none; }
     .plan-card-state:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(249,99,2,0.06); }
-    .plan-card.in-progress { background:rgba(232,242,255,0.55); border-color:rgba(0,122,255,0.25); }
+    .plan-tag { display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; letter-spacing:0.01em; border:1px solid transparent; max-width:100%; overflow-wrap:anywhere; transition:all 0.2s; min-height:26px; }
+    .plan-tag-ic { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; opacity:0.7; }
+    .plan-tag-val { min-width:40px; display:inline-block; }
+    .plan-tag.timeline { background:rgba(0,122,255,0.07); color:var(--blue); border-color:rgba(0,122,255,0.18); }
+    .plan-tag.effort { background:rgba(138,92,246,0.08); color:#7a4ed6; border-color:rgba(138,92,246,0.20); }
+    .plan-tag[contenteditable="true"] { cursor:text; outline:none; border-style:dashed; }
+    .plan-tag[contenteditable="true"]:focus { background:rgba(255,255,255,0.85); border-style:solid; box-shadow:0 0 0 3px rgba(249,99,2,0.05); }
+    .plan-tag .plan-tag-val:empty::before { content:attr(data-placeholder); opacity:0.55; font-style:italic; font-weight:500; }
+    .plan-card .ip-pill { padding:6px 12px; font-size:10px; gap:6px; min-height:26px; }
+    .plan-card .ip-pill-dot { width:7px; height:7px; }
+    .plan-card .owner-badge { padding:3px 10px 3px 3px; gap:5px; font-size:11px; min-height:26px; }
+    .plan-card .owner-dot { width:20px; height:20px; font-size:8px; }
+    .plan-card .owner-picker-btn { width:26px; height:26px; font-size:10px; }
+    .plan-card.in-progress { background:rgba(232,250,238,0.55); border-color:rgba(48,209,88,0.28); }
+    .plan-card .ip-pill:hover { background:var(--green-bg); color:var(--green); border-color:var(--green-border); }
+    .plan-card .ip-pill.active { background:var(--green-bg); color:var(--green); border-color:var(--green-border); }
+    .plan-card .ip-pill.active:hover { background:rgba(48,209,88,0.14); }
+    .plan-card .ip-pill.active .ip-pill-dot { box-shadow:0 0 6px var(--green-glow); }
     .ip-pill { display:inline-flex; align-items:center; gap:5px; padding:3px 9px 3px 8px; border-radius:20px; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; background:rgba(0,0,0,0.04); color:var(--text-tertiary); border:1px solid rgba(0,0,0,0.05); transition:all 0.2s; cursor:pointer; }
     .ip-pill:hover { background:var(--blue-bg); color:var(--blue); border-color:var(--blue-border); }
     .ip-pill.active { background:var(--blue-bg); color:var(--blue); border-color:var(--blue-border); }
@@ -925,9 +942,17 @@
     else q.planned.forEach((p,i)=>{
       const inProg=p.state==='inProgress';
       const editAttr=ed?`contenteditable="true" data-action="qEditPlanned" data-index="${i}"`:'';
+      const tl=p.timeline||'',ef=p.effort||'';
       h+=`<div class="plan-card${inProg?' in-progress':''}"><div class="plan-card-text" ${editAttr}>${esc(p.text)}</div><div class="plan-card-meta">`;
       if(ed)h+=`<button class="ip-pill${inProg?' active':''}" data-action="qToggleProgress" data-index="${i}"><span class="ip-pill-dot"></span>${inProg?'In Progress':'Mark In Progress'}</button>`;
       else if(inProg)h+=`<span class="ip-pill active static"><span class="ip-pill-dot"></span>In Progress</span>`;
+      if(ed){
+        h+=`<span class="plan-tag timeline"><span class="plan-tag-ic">Timeline</span><span class="plan-tag-val" contenteditable="true" data-action="qEditTimeline" data-index="${i}" data-placeholder="add timeline">${esc(tl)}</span></span>`;
+        h+=`<span class="plan-tag effort"><span class="plan-tag-ic">Effort</span><span class="plan-tag-val" contenteditable="true" data-action="qEditEffort" data-index="${i}" data-placeholder="add effort">${esc(ef)}</span></span>`;
+      } else {
+        if(tl)h+=`<span class="plan-tag timeline"><span class="plan-tag-ic">Timeline</span><span class="plan-tag-val">${esc(tl)}</span></span>`;
+        if(ef)h+=`<span class="plan-tag effort"><span class="plan-tag-ic">Effort</span><span class="plan-tag-val">${esc(ef)}</span></span>`;
+      }
       h+=ed?opc('qPlanned',i,p.owners||[]):ob(p.owners);
       h+=`</div>${ed?`<button class="plan-card-del" data-action="qDeletePlanned" data-index="${i}">x</button>`:''}</div>`;
     });
@@ -1007,7 +1032,7 @@
     }
   }
   function hi(e){const el=e.target.closest('[data-action]');if(!el)return;const a=el.dataset.action,idx=parseInt(el.dataset.index),txt=el.textContent.trim();
-    if(a.startsWith('qEdit')){const q=gq(qKey(qOff));switch(a){case'qEditSummary':q.summary=txt;break;case'qEditPlanned':q.planned[idx].text=txt;break;case'qEditBlocker':q.blockers[idx].text=txt;break;}qsave();return;}
+    if(a.startsWith('qEdit')){const q=gq(qKey(qOff));switch(a){case'qEditSummary':q.summary=txt;break;case'qEditPlanned':q.planned[idx].text=txt;break;case'qEditTimeline':q.planned[idx].timeline=txt;break;case'qEditEffort':q.planned[idx].effort=txt;break;case'qEditBlocker':q.blockers[idx].text=txt;break;}qsave();return;}
     const key=wk(weekOff),w=gw(key);switch(a){case'editSummary':w.summary=txt;break;case'editWin':w.wins[idx].text=txt;break;case'editTask':w.tasks[idx].text=txt;break;case'editBlocker':w.blockers[idx].text=txt;break;case'editNextWeek':w.nextWeek[idx].text=txt;break;}save();}
   function hch(e){const el=e.target.closest('[data-action]');if(!el)return;const a=el.dataset.action;
     if(a==='qChangeStatus'){gq(qKey(qOff)).status=el.value;qsave();render();return;}
