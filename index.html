@@ -540,7 +540,6 @@
           </button>
           <div class="dial-center" id="qDialCenter">
             <div class="dial-label" id="quarterLabel"></div>
-            <div class="dial-sublabel" id="quarterSublabel"></div>
           </div>
           <button class="dial-arrow" id="nextQuarter" title="Next quarter">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -925,7 +924,6 @@
   function renderQuarter(){
     const key=qKey(qOff),q=gq(key),ed=admin;
     document.getElementById('quarterLabel').textContent=qLabel(qOff);
-    document.getElementById('quarterSublabel').textContent=qSub(qOff);
     const ab=document.getElementById('adminToggle');ab.textContent=ed?'Lock':'Admin';ab.className='admin-toggle'+(ed?' unlocked':'');
     document.getElementById('nextQuarter').disabled=!ed&&qOff>=1;
     document.getElementById('prevQuarter').disabled=qOff<=0;
