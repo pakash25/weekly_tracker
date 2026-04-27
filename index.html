@@ -223,6 +223,34 @@
     .pdf-btn { padding:5px 12px; border-radius:8px; font-size:10px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-tertiary); background:rgba(0,0,0,0.04); transition:all 0.2s; display:flex; align-items:center; gap:5px; }
     .pdf-btn:hover { background:rgba(0,0,0,0.07); color:var(--text-secondary); }
     .pdf-btn svg { flex-shrink:0; }
+    .links-wrap { position:relative; display:inline-flex; }
+    .links-btn { padding:5px 12px; border-radius:8px; font-size:10px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-tertiary); background:rgba(0,0,0,0.04); transition:all 0.2s; display:flex; align-items:center; gap:5px; }
+    .links-btn:hover { background:rgba(0,0,0,0.07); color:var(--text-secondary); }
+    .links-btn.open { background:var(--primary-subtle); color:var(--primary); }
+    .links-btn svg { flex-shrink:0; }
+    .links-caret { transition:transform 0.2s; }
+    .links-btn.open .links-caret { transform:rotate(180deg); }
+    .links-panel { position:absolute; top:calc(100% + 8px); right:0; width:420px; max-width:90vw; max-height:62vh; padding:14px 14px 12px; background:rgba(255,255,255,0.96); backdrop-filter:blur(60px) saturate(1.6); -webkit-backdrop-filter:blur(60px) saturate(1.6); border:1px solid rgba(0,0,0,0.06); border-radius:18px; box-shadow:0 16px 48px rgba(0,0,0,0.12),inset 0 1px 0 rgba(255,255,255,0.8); transform:translateY(-6px) scale(0.98); opacity:0; visibility:hidden; transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1); z-index:500; display:flex; flex-direction:column; text-align:left; text-transform:none; letter-spacing:normal; }
+    .links-panel.show { transform:translateY(0) scale(1); opacity:1; visibility:visible; }
+    .links-panel-head { display:flex; align-items:center; justify-content:space-between; padding:0 4px 10px; border-bottom:1px solid rgba(0,0,0,0.05); margin-bottom:10px; }
+    .links-panel-title { font-size:12px; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:8px; }
+    .links-panel-title-dot { width:7px; height:7px; border-radius:50%; background:var(--primary); }
+    .links-list { overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:8px; }
+    .link-item { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,0.55); border:1px solid rgba(0,0,0,0.04); transition:all 0.2s; }
+    .link-item:hover { background:rgba(255,255,255,0.85); box-shadow:0 4px 14px rgba(0,0,0,0.05); }
+    .link-item-body { flex:1; min-width:0; }
+    .link-item-title { font-size:12px; font-weight:700; color:var(--text-primary); margin-bottom:3px; word-break:break-word; }
+    .link-item-url { font-size:11px; font-weight:500; color:var(--primary); text-decoration:none; word-break:break-all; display:block; margin-bottom:6px; }
+    .link-item-url:hover { text-decoration:underline; }
+    .link-item-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .link-item-date { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-tertiary); }
+    .link-item-del { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--text-tertiary); background:rgba(0,0,0,0.04); transition:all 0.2s; flex-shrink:0; }
+    .link-item-del:hover { background:rgba(220,38,38,0.12); color:#dc2626; }
+    .link-empty { padding:24px; text-align:center; font-size:11px; color:var(--text-tertiary); }
+    .link-edit-row { display:flex; flex-direction:column; gap:6px; flex:1; min-width:0; }
+    .link-edit-input { width:100%; padding:6px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); background:rgba(255,255,255,0.7); font-size:12px; font-weight:600; color:var(--text-primary); font-family:inherit; outline:none; transition:all 0.2s; }
+    .link-edit-input:focus { border-color:var(--primary-border); background:rgba(255,255,255,0.95); }
+    .link-edit-input.url { font-size:11px; font-weight:500; color:var(--primary); }
     .view-toggle-btn { padding:5px 12px; border-radius:8px; font-size:10px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-tertiary); background:rgba(0,0,0,0.04); transition:all 0.2s; display:flex; align-items:center; gap:5px; }
     .view-toggle-btn:hover { background:rgba(0,0,0,0.07); color:var(--text-secondary); }
     .view-toggle-btn.active { background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow:0 2px 10px var(--primary-glow); }
@@ -498,7 +526,7 @@
     }
     @media print {
       .header { position:static; }
-      .admin-toggle,.add-btn,.admin-item-del,.save-indicator,.admin-bar,.admin-panels,.pdf-btn,.week-dropdown { display:none!important; }
+      .admin-toggle,.add-btn,.admin-item-del,.save-indicator,.admin-bar,.admin-panels,.pdf-btn,.links-btn,.week-dropdown { display:none!important; }
       body { background:white; }
       .bg-layer { display:none; }
       .glass,.metric-orb,.team-strip,.nw-card,.week-dial { backdrop-filter:none; -webkit-backdrop-filter:none; background:white; box-shadow:none; border-color:#eee; }
@@ -551,6 +579,20 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span id="viewToggleLabel">Quarter Planner</span>
         </button>
+        <div class="links-wrap" id="linksWrap">
+          <button class="links-btn" id="linksBtn" title="All Links" aria-expanded="false">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            All Links
+            <svg class="links-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="links-panel" id="linksPanel">
+            <div class="links-panel-head">
+              <div class="links-panel-title"><span class="links-panel-title-dot"></span>All Links</div>
+              <button class="add-btn" id="linksAddBtn" style="display:none;">+ Add Link</button>
+            </div>
+            <div class="links-list" id="linksList"></div>
+          </div>
+        </div>
         <button class="pdf-btn" id="downloadPdf" title="Download PDF">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           PDF
@@ -592,7 +634,7 @@
 <script>
 (function(){
   'use strict';
-  const GIST_ID='1cb579c722b524ff1c50eb7c8391f154',GIST_FILE='data.json';
+  const GIST_ID='c9d7e812a67b22da62924fac1b383c3f',GIST_FILE='data.json';
   function getGistToken(){return sessionStorage.getItem('gist_pat')||'';}
   function setGistToken(t){sessionStorage.setItem('gist_pat',t);}
   const ADMIN_PIN='400570';
@@ -650,6 +692,64 @@
       blockers:q.blockers.length
     };
   }
+
+  function getLinks(){
+    let l=allData.__links;
+    if(Array.isArray(l)){l=allData.__links={items:l};}
+    if(!l||typeof l!=='object'){l=allData.__links={items:[]};}
+    if(!Array.isArray(l.items))l.items=[];
+    return l.items;
+  }
+  function lsave(){
+    if(!allData.__links||typeof allData.__links!=='object'||Array.isArray(allData.__links))allData.__links={items:[]};
+    allData.__links._ts=Date.now();
+    dirtyKeys.add('__links');sc();si();clearTimeout(saveT);saveT=setTimeout(()=>sg(),1500);
+  }
+  function fmtLinkDate(ts){
+    if(!ts)return'';
+    const d=new Date(ts);
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }
+  function renderLinks(){
+    const list=getLinks(),el=document.getElementById('linksList'),addBtn=document.getElementById('linksAddBtn');
+    addBtn.style.display=admin?'':'none';
+    if(!list.length){
+      el.innerHTML='<div class="link-empty">No links yet'+(admin?' -- click "+ Add Link" to create one.':'.')+'</div>';
+      return;
+    }
+    let h='';
+    list.forEach((l,i)=>{
+      const owners=l.owners||[];
+      h+='<div class="link-item">';
+      if(admin){
+        h+=`<div class="link-edit-row">
+          <input class="link-edit-input" type="text" data-laction="editTitle" data-index="${i}" value="${esc(l.title||'')}" placeholder="Link title"/>
+          <input class="link-edit-input url" type="url" data-laction="editUrl" data-index="${i}" value="${esc(l.url||'')}" placeholder="https://..."/>
+          <div class="link-item-meta">
+            <span class="link-item-date">Added ${esc(fmtLinkDate(l.addedAt))}</span>
+            ${opc('link',i,owners)}
+          </div>
+        </div>
+        <button class="link-item-del" data-laction="deleteLink" data-index="${i}" title="Delete">x</button>`;
+      } else {
+        const url=l.url||'#';
+        h+=`<div class="link-item-body">
+          <div class="link-item-title">${esc(l.title||'Untitled')}</div>
+          <a class="link-item-url" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(url)}</a>
+          <div class="link-item-meta">
+            <span class="link-item-date">Added ${esc(fmtLinkDate(l.addedAt))}</span>
+            ${ob(owners)}
+          </div>
+        </div>`;
+      }
+      h+='</div>';
+    });
+    el.innerHTML=h;
+  }
+  function isLinksOpen(){return document.getElementById('linksPanel').classList.contains('show');}
+  function openLinksPanel(){renderLinks();document.getElementById('linksPanel').classList.add('show');document.getElementById('linksBtn').classList.add('open');document.getElementById('linksBtn').setAttribute('aria-expanded','true');}
+  function closeLinksPanel(){document.getElementById('linksPanel').classList.remove('show');document.getElementById('linksBtn').classList.remove('open');document.getElementById('linksBtn').setAttribute('aria-expanded','false');}
+  function toggleLinksPanel(){if(isLinksOpen())closeLinksPanel();else openLinksPanel();}
 
   const HARD_START=new Date(2026,1,16);
   const WEEKS_FORWARD_ADMIN=4;
@@ -991,6 +1091,38 @@
 
   document.getElementById('downloadPdf').addEventListener('click',()=>{window.print();});
 
+  document.getElementById('linksBtn').addEventListener('click',e=>{e.stopPropagation();toggleLinksPanel();});
+  document.getElementById('linksPanel').addEventListener('click',e=>e.stopPropagation());
+  document.addEventListener('click',e=>{if(isLinksOpen()&&!document.getElementById('linksWrap').contains(e.target))closeLinksPanel();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isLinksOpen())closeLinksPanel();});
+  document.getElementById('linksAddBtn').addEventListener('click',()=>{
+    if(!admin)return;
+    getLinks().push({title:'New link',url:'',owners:[],addedAt:Date.now()});
+    lsave();renderLinks();
+  });
+  const linksListEl=document.getElementById('linksList');
+  linksListEl.addEventListener('click',e=>{
+    const owEl=e.target.closest('[data-action="toggleOwner"][data-type="link"]');
+    if(owEl){
+      if(!admin)return;
+      const idx=parseInt(owEl.dataset.index),mid=owEl.dataset.member,arr=getLinks()[idx];
+      if(!arr)return;if(!arr.owners)arr.owners=[];
+      const oi=arr.owners.indexOf(mid);if(oi>=0)arr.owners.splice(oi,1);else arr.owners.push(mid);
+      lsave();renderLinks();return;
+    }
+    const el=e.target.closest('[data-laction]');if(!el)return;
+    const a=el.dataset.laction,idx=parseInt(el.dataset.index);
+    if(a==='deleteLink'&&admin){getLinks().splice(idx,1);lsave();renderLinks();}
+  });
+  linksListEl.addEventListener('input',e=>{
+    const el=e.target.closest('[data-laction]');if(!el||!admin)return;
+    const a=el.dataset.laction,idx=parseInt(el.dataset.index),val=el.value;
+    const arr=getLinks()[idx];if(!arr)return;
+    if(a==='editTitle')arr.title=val;
+    else if(a==='editUrl')arr.url=val;
+    lsave();
+  });
+
   const mainEl=document.getElementById('mainContent');
   mainEl.addEventListener('click',hc);mainEl.addEventListener('input',hi);mainEl.addEventListener('change',hch);
   function hc(e){
@@ -1043,7 +1175,7 @@
   document.getElementById('nextWeek').addEventListener('click',()=>{
     if(weekOff<getMaxWeek()){weekOff++;toggleDropdown(false);render();}
   });
-  document.getElementById('adminToggle').addEventListener('click',()=>{if(admin){admin=false;weekOff=Math.min(weekOff,0);qOff=Math.max(0,Math.min(qOff,1));toggleDropdown(false);if(saveT){clearTimeout(saveT);saveT=null;sg();}render();}else spm();});
+  document.getElementById('adminToggle').addEventListener('click',()=>{if(admin){admin=false;weekOff=Math.min(weekOff,0);qOff=Math.max(0,Math.min(qOff,1));toggleDropdown(false);if(saveT){clearTimeout(saveT);saveT=null;sg();}render();if(isLinksOpen())renderLinks();}else spm();});
 
   function setTab(t){
     currentTab=t;
@@ -1098,7 +1230,7 @@
       const pin=Array.from(pi).map(i=>i.value).join('');
       if(pin!==ADMIN_PIN){pi.forEach(i=>i.classList.add('error'));setTimeout(()=>pi.forEach(i=>{i.classList.remove('error');i.value='';}),500);pi[0].focus();return;}
       // PIN correct -- check if we already have a token in session
-      if(getGistToken()){admin=true;hpm();render();return;}
+      if(getGistToken()){admin=true;hpm();render();if(isLinksOpen())renderLinks();return;}
       // Show PAT step
       pinStepNum=2;
       document.getElementById('pinStep1').style.display='none';
@@ -1112,6 +1244,7 @@
       if(!tok){document.getElementById('patInput').style.borderColor='var(--red)';setTimeout(()=>document.getElementById('patInput').style.borderColor='',800);return;}
       setGistToken(tok);
       admin=true;hpm();render();
+      if(isLinksOpen())renderLinks();
     }
   }
 
